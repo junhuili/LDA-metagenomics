@@ -2,7 +2,7 @@
 title: "Latent Dirichlet Allocation for Metagenomics: testing an initial assumption"
 author: "Russell Dinnage"
 date: "23/07/2014"
-output: html_document
+output: md_document
 ---
 
 What I want to do here is find out if Latent Dirichlet Allocation and similar topic models are suitable for metagenomics data. I want to test if the probability of a k-mer (or genomic 'word'), or it's frequency in a genome can be approximated by the frequency of that k-mer in a collection of short reads drawn from that genome. My intuition is that it can, but the quality of the approximation will depend of the read length and the chromosome length of the genome. This is because overlapping regions of the reads could mess up the approximation, if they are not distibuted uniformly throughout the genome. I believe they should be for the most part, but this could break down near the ends of chromosomes (e.g. reads that are too close to the ends will be tossed because they will be too short, and so the reads just to the other side will have less overlaps, meaning the kmers here may be underrepresented). Since the length of genome that are a read's length from the ends of chromosome are probably rare compared to the full length of the genome, I suspect this won't be a big issue.
@@ -12,6 +12,7 @@ If we can approximate the k-mer frequencies of a source genome from its reads, t
 First I am going to simulate a set of genome using the software ALF:
 
 ```{r}
-source("/home/din02g/Google Drive/AFD-Project/R/ALF.R")
+#source("/home/din02g/Google Drive/AFD-Project/R/ALF.R")
+print("Testing!")
 ```
 

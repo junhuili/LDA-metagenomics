@@ -9,10 +9,29 @@ What I want to do here is find out if Latent Dirichlet Allocation and similar to
 
 If we can approximate the k-mer frequencies of a source genome from its reads, then we can model a mixture of reads from many genomes as a mixture model where the frequency of a k-mer is equal to the sum of the frequencies of that k-mer in each genome times the frequency of each genome in that particular mixture. This is exactly what is modelled with a Latent Dirichlet Allocation model, only it is usually used to model documents as a mixture of topics (e.g. probability of a word in a document is equal to probability in each topic, times the probability of each topic being in that document). Documents are sites, topics are genomes, and words are k-mers.
 
-First I am going to simulate a set of genome using the software ALF:
+First I am going to simulate a set of genomes using the software ALF (through my package `Ralf`):
 
-```{r}
-#source("/home/din02g/Google Drive/AFD-Project/R/ALF.R")
-print("Testing!")
+```{r, cache = TRUE, message=FALSE}
+library(magrittr)
+devtools::install_github("rdinnager/Ralf")
+library("Ralf")
+## generate 50 genomes of 50 genes each
+genome_sim <- run_ALF("genome_sim", 50, 50, 400, 50, 0.06, 0.025, 0.0001, "temp", 
+                      "/home/din02g/ALF_standalone/bin", TRUE) %>% load_ALF
+```
+
+Let's take a look at the simulated tree used to simulate those genomes, to see if everything looks okay.
+
+```{r, cache=TRUE, dev='svg'}
+plot(genome_sim$tree, cex = 0.65, no.margin = TRUE)
+```
+
+The next step it to concatenate the 50 independently simulated genes into one long genomic sequence. We will assume this constitutes a single genome unit, such as a chromosome.
+
+```{r, cache=TRUE}
+genome_chrom <- ALF_cat(genome_sim)
+## convert dna to DNAStringSet for analysis with Biostrings
+genome_dna <- DNAStringSet(sapply(genome_chrom$dna, function(x) unlist(x)))
+genome_dna
 ```
 

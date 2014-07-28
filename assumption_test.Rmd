@@ -91,18 +91,18 @@ reads_kmers <- apply(reads_kmer_counts, 2, mean)
 library(ggplot2)
 kmer_dat <- data.frame(Genome = as.vector(genome_kmer_counts), Reads = reads_kmers) %>% tbl_df
 kmer_dat
-p <- ggplot(kmer_dat, aes(Genome, Reads)) + geom_point()
+p <- ggplot(kmer_dat, aes(Genome, Reads)) + geom_point() + stat_function(fun = function(x) x, colour = "white")
 p
 ```
 
-Looks like the mean frequency of a k-mer in the reads is not a bad estimator of its frequency in the source genome. There is some error though. Let's see if we can reduce the error by increasing the number of reads (in other words, increase the read "coverage").
+The white line is the 1:1 line, so it looks like the mean frequency of a k-mer in the reads is not a bad (unbiased) estimator of its frequency in the source genome. There is some error though. Let's see if we can reduce the error by increasing the number of reads (in other words, increase the read "coverage").
 
 ```{r test_more_reads, dev='svg'}
 reads10000 <- gen_segs(working_seq, len = 90, num = 10000)
 reads_kmer_counts10000 <- oligonucleotideFrequency(reads10000, width = 5, as.prob = TRUE)
 reads_kmers10000 <- apply(reads_kmer_counts10000, 2, mean)
 kmer_dat10000 <- data.frame(Genome = as.vector(genome_kmer_counts), Reads = reads_kmers10000) %>% tbl_df
-p <- ggplot(kmer_dat10000, aes(Genome, Reads)) + geom_point()
+p <- ggplot(kmer_dat10000, aes(Genome, Reads)) + geom_point() + stat_function(fun = function(x) x, colour = "white")
 p
 ```
 

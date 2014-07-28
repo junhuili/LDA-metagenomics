@@ -31,6 +31,7 @@ If we can approximate the k-mer frequencies of a source genome from its reads, t
 
 Load the necessary project package:
 ```{r loads}
+if (!require("LDAmetagenomics", character.only = TRUE)) devtools::install_github("rdinnager/LDA-metagenomics")
 library(LDAmetagenomics)
 set.seed(20140728)
 ```
@@ -39,11 +40,15 @@ First I am going to simulate a set of genomes using the software ALF (through my
 
 ```{r gen_genomes, cache = TRUE, message=FALSE}
 library(magrittr)
-devtools::install_github("rdinnager/Ralf")
+if (!require("LDAmetagenomics", character.only = TRUE)) devtools::install_github("rdinnager/Ralf")
 library("Ralf")
 ## generate 50 genomes of 50 genes each
-genome_sim <- run_ALF("genome_sim", 50, 50, 400, 50, 0.06, 0.025, 0.0001, "temp", 
-                      "/home/din02g/ALF_standalone/bin", TRUE) %>% load_ALF
+if (!file.exists("temp/genome_sim")){
+  genome_sim <- run_ALF("genome_sim", 50, 50, 400, 50, 0.06, 0.025, 0.0001, "temp", 
+                        "/home/din02g/ALF_standalone/bin", TRUE) %>% load_ALF
+} else {
+  genome_sim <- "temp/genome_sim" %>% load_ALF  
+}
 ```
 
 Let's take a look at the simulated tree used to simulate those genomes, to see if everything looks okay.

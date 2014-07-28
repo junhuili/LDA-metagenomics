@@ -70,6 +70,42 @@ Okay, now that we have about 50 genomes to play with, we are going to start with
 
 ```{r make_reads}
 working_seq <- genome_dna %>% sample(1)
-test <- gen_segs(working_seq, len = 90, num = 1000)
-test
+reads <- gen_segs(working_seq, len = 90, num = 1000)
+reads
 ```
+
+We can count the frequency of different genomic words of a given length $K$, using the `oligonucleotideFrequency()` function in `Biostrings`. To keep memory usage down, we will only look at small $K$ to begin with. To look at bigger $K$ we will have to come up with something more memory efficient than storing the frequency of all _possible_ words!
+
+```{r kmer_freq}
+genome_kmer_counts <- oligonucleotideFrequency(working_seq, width = 5, as.prob = TRUE)
+genome_kmer_counts[ , 50:60]
+## the frequencies in the short reads
+reads_kmer_counts <- oligonucleotideFrequency(reads, width = 5, as.prob = TRUE)
+head(reads_kmer_counts[ , 50:60])
+```
+
+The expected frequency of a k-mer in the genome should be approximated by the mean frequency of the k-mer in the short reads drawn from the genome. Let's see if this holds up.
+
+```{r test_kmers, dev='svg'}
+reads_kmers <- apply(reads_kmer_counts, 2, mean)
+library(ggplot2)
+kmer_dat <- data.frame(Genome = as.vector(genome_kmer_counts), Reads = reads_kmers) %>% tbl_df
+kmer_dat
+p <- ggplot(kmer_dat, aes(Genome, Reads)) + geom_point()
+p
+```
+
+Looks like the mean frequency of a k-mer in the reads is not a bad estimator of its frequency in the source genome. There is some error though. Let's see if we can reduce the error by increasing the number of reads (in other words, increase the read "coverage").
+
+```{r test_more_reads, dev='svg'}
+reads10000 <- gen_segs(working_seq, len = 90, num = 10000)
+reads_kmer_counts10000 <- oligonucleotideFrequency(reads10000, width = 5, as.prob = TRUE)
+reads_kmers10000 <- apply(reads_kmer_counts10000, 2, mean)
+kmer_dat10000 <- data.frame(Genome = as.vector(genome_kmer_counts), Reads = reads_kmers10000) %>% tbl_df
+p <- ggplot(kmer_dat10000, aes(Genome, Reads)) + geom_point()
+p
+```
+
+Indeed, this looks much better. There is probably a way to analytically determine the error distribution as a function of number of reads and read length, but that is beyond my meager math skills at the moment. This would be very useful down the line in this project, so I will do some thinking on it. If anyone happens to be reading this, and know of any mathematical work on this type of question, please let me know!
+
+The next step will be to simulate "communities" of genomes by shuffling genomes together into groups. Then for each group or community, simulate drawing short reads from the genome, where the chance of a read being drawn from a genome is proportional to its relative abundance in the sample. Then we can see if the frequency of k-mers in the reads effectively approximates the frequency we would expect based on the abundances of the source genomes in each community.

@@ -130,7 +130,38 @@ e_freq[1:50]
 
 Now let's see what we get from analyzing the k-mer frequencies from reads drawn from these communities.
 
-```{r comm_read_kmers}
+```{r comm_read_kmers, dev='svg'}
 comm_reads <- mapply(gen_segs, as.character(genome_dna), 90, gen_reads) %>%
   DNAStringSetList %>% unlist
+comm_read_kmers <- oligonucleotideFrequency(comm_reads, width = 5, as.prob = TRUE)
+comm_read_mean <- apply(comm_read_kmers, 2, mean)
+
+kmer_dat_comm <- data.frame(Genome = as.vector(e_freq), Reads = comm_read_mean) %>% tbl_df
+p <- ggplot(kmer_dat_comm, aes(Genome, Reads)) + geom_point() + stat_function(fun = function(x) x, colour = "white")
+p
+```
+
+The trouble with this is, if the genomes are all very similar, then it won't matter which genomes are prevailent in the mixture, the k-mer count will be pretty similar no matter what/ Let's try comparing the expected k-mer frequencies with read k-mer frequencies generated from a random different community.
+
+```{r compare_diff}
+gen_props_new <- rdirichlet(1, rep(0.2, 50)) %>% as.vector
+gen_props_new
+gen_reads_new <- gen_props_new  %>% rmultinom(1, read_sample, .) %>% as.vector
+comm_reads_new <- mapply(gen_segs, as.character(genome_dna), 90, gen_reads_new) %>%
+  DNAStringSetList %>% unlist
+comm_read_kmers_new <- oligonucleotideFrequency(comm_reads_new, width = 5, as.prob = TRUE)
+comm_read_mean_new <- apply(comm_read_kmers_new, 2, mean)
+
+kmer_dat_comm_new <- data.frame(Genome = as.vector(e_freq), Reads = comm_read_mean_new) %>% tbl_df
+p <- ggplot(kmer_dat_comm_new, aes(Genome, Reads)) + geom_point() + stat_function(fun = function(x) x, colour = "white")
+p
+```
+
+So it looks like the assumptions that in my mind would be necessary for Latent Dirichlet Allocation models to be suitable for metagenomics read data are satisfied more or less. A model of the form 
+
+
+should be applicable. The reads are at least an unbiased estimator of the quantity being modelled, although the model, if left unmodified will not characterize the uncertainty correctly. This is a problem to be dealt with later. In any event, we are ready to try LDA on some simulated data, and see what we get. There will be a number of challenges to solve. In particular, there will be a great amount of redundancy in metagenomics data, which might affect the ability of LDA to settle on a reasonable model. Additionally, we have to choose a word-length $K$ to convert genomes into a set of (overlapping) words. Out of curiousity, I wonder how the above analyses are effected:
+
+```{r kmer_length}
+
 ```

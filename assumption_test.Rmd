@@ -30,7 +30,7 @@ What I want to do here is find out if Latent Dirichlet Allocation and similar to
 If we can approximate the k-mer frequencies of a source genome from its reads, then we can model a mixture of reads from many genomes as a mixture model where the frequency of a k-mer is equal to the sum of the frequencies of that k-mer in each genome times the frequency of each genome in that particular mixture. This is exactly what is modelled with a Latent Dirichlet Allocation model, only it is usually used to model documents as a mixture of topics (e.g. probability of a word in a document is equal to probability in each topic, times the probability of each topic being in that document). Documents are sites, topics are genomes, and words are k-mers.
 
 Load the necessary project package:
-```{r loads}
+```{r loads, cache=FALSE}
 if (!require("LDAmetagenomics", character.only = TRUE)) devtools::install_github("rdinnager/LDA-metagenomics")
 library(LDAmetagenomics)
 set.seed(20140728)
@@ -108,4 +108,29 @@ p
 
 Indeed, this looks much better. There is probably a way to analytically determine the error distribution as a function of number of reads and read length, but that is beyond my meager math skills at the moment. This would be very useful down the line in this project, so I will do some thinking on it. If anyone happens to be reading this, and know of any mathematical work on this type of question, please let me know!
 
-The next step will be to simulate "communities" of genomes by shuffling genomes together into groups. Then for each group or community, simulate drawing short reads from the genome, where the chance of a read being drawn from a genome is proportional to its relative abundance in the sample. Then we can see if the frequency of k-mers in the reads effectively approximates the frequency we would expect based on the abundances of the source genomes in each community.
+The next step will be to simulate "communities" of genomes by shuffling genomes together into groups. Then for each group or community, simulate drawing short reads from the genome, where the chance of a read being drawn from a genome is proportional to its relative abundance in the sample. Then we can see if the frequency of k-mers in the reads effectively approximates the frequency we would expect based on the abundances of the source genomes in each community. First, let's create a random community from the 50 genomes.
+
+```{r mixtures}
+library(MCMCpack)
+read_sample <- 10000 ## number of reads total
+gen_props <- rdirichlet(1, rep(0.2, 50)) %>% as.vector ## genome proportions 
+gen_props
+gen_reads <- gen_props  %>% rmultinom(1, read_sample, .) %>% as.vector ## number of reads to draw from each genome (assuming probability of sampling a read from a genome is equal to that genomes frequency 
+gen_reads
+```
+
+So, given that the genomes are present in proportion `gen_props`, the expected k-mer frequencies should just be the mean of the frequencies of the k-mer in each genome, weighted by the proportion of the genomes in the sample.
+
+```{r kmer_weight}
+e_freq <- (oligonucleotideFrequency(genome_dna, width = 5) * gen_props) %>% 
+  apply(2, mean) ## this takes advantage of R's column-wise multiplication
+e_freq <- e_freq / sum(e_freq)
+e_freq[1:50]
+```
+
+Now let's see what we get from analyzing the k-mer frequencies from reads drawn from these communities.
+
+```{r comm_read_kmers}
+comm_reads <- mapply(gen_segs, as.character(genome_dna), 90, gen_reads) %>%
+  DNAStringSetList %>% unlist
+```

@@ -143,7 +143,7 @@ p
 
 The trouble with this is, if the genomes are all very similar, then it won't matter which genomes are prevailent in the mixture, the k-mer count will be pretty similar no matter what/ Let's try comparing the expected k-mer frequencies with read k-mer frequencies generated from a random different community.
 
-```{r compare_diff}
+```{r compare_diff, dev='svg'}
 gen_props_new <- rdirichlet(1, rep(0.2, 50)) %>% as.vector
 gen_props_new
 gen_reads_new <- gen_props_new  %>% rmultinom(1, read_sample, .) %>% as.vector

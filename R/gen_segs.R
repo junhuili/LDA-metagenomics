@@ -5,6 +5,7 @@
 #' @return A \code{\link{DNAStringSet}} object containing the generated sequence segmenta
 #' @export
 gen_segs <- function(seq, len = 90, num = 1000) {
+  if (num == 0) return(list())
   seqlen <- nchar(seq)
   ## choose random start and stop positions for segments within the original sequence
   pos_seq <- runif(num, 0, seqlen - len) %>% data.frame %>% set_names("lower") %>% mutate(upper=lower + len - 1)
